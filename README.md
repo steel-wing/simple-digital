@@ -1,2 +1,2 @@
-# simple-digital
-A simple digital watchface designed for the Pebble Smartwatch, finally brought to fruition as I had imagined it should be in 2017.
+# Simple Digital
+When I got my first pebble smartwatch for Christmas in in 2016, it was a dream come true. I immediately went to the Pebble store to download the simplest and cleanest digital watchface around, except there were none that looked quite like what I had wanted. I then learned JavaScript to build my own, which has been on the store ever since. However, JavaScript implementations on the Pebble were lacking in cleanliness and customizability, and so this is a final, perfected version of the one I made back in 2017.
