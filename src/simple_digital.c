@@ -1,86 +1,73 @@
-#include "simple_digital.h"
+#include <pebble.h>
 
-#include "pebble.h"
+// Declare the window and layer for the watchface
+Window *window;
+Layer *watchface_layer;
 
-static Window *s_main_window;
+// Size settings
+int segment_size = 10;  // Default size for segments
+GColor segment_color = GColorBlack;  // Default segment color
+GColor background_color = GColorWhite;  // Default background color
 
-static TextLayer *s_time_layer;
-
-
-static void main_window_load(Window *window) {
-  // Get information about the Window
-  Layer *window_layer = window_get_root_layer(window);
-  GRect bounds = layer_get_bounds(window_layer);
-
-  // Create the TextLayer with specific bounds
-  s_time_layer = text_layer_create(
-      GRect(0, PBL_IF_ROUND_ELSE(58, 52), bounds.size.w, 50));
-
-  // Improve the layout to be more like a watchface
-  text_layer_set_background_color(s_time_layer, GColorClear);
-  text_layer_set_text_color(s_time_layer, GColorBlack);
-  text_layer_set_text(s_time_layer, "00:00");
-  text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
-  text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
-
-  // Add it as a child layer to the Window's root layer
-  layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
+// Function to draw a single digit
+void draw_segment_display(GContext *ctx, int x, int y, int number) {
+    // Define the 7 segments (A to G) positions for a digit
+    // Here we would define the coordinates for each segment, 
+    // and how each segment would be drawn for different numbers.
+    
+    // Example logic for segment A
+    if (number & 0x01) {  // Check if segment A should be on
+        graphics_fill_rect(ctx, GRect(x, y, segment_size, segment_size), 0, GCornersAll);
+    }
+    
+    // Repeat for segments B-G...
 }
 
-static void main_window_unload(Window *window) {
-  // Destroy TextLayer
-  text_layer_destroy(s_time_layer);
+// Function to update the watchface
+void watchface_update_proc(Layer *layer, GContext *ctx) {
+    // Get the current time
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    
+    // Get current hour and minute
+    int hour = t->tm_hour;
+    int minute = t->tm_min;
+    
+    // Center the digits on the screen based on the size and width of the watch
+    int screen_width = 144;
+    int screen_height = 168;
+    
+    // Calculate the positions for drawing the segments (centered)
+    int x = (screen_width - (segment_size * 3)) / 2;
+    int y = (screen_height - segment_size) / 2;
+    
+    // Draw digits (for now, just one for demonstration)
+    draw_segment_display(ctx, x, y, hour / 10);  // Tens place of hour
+    draw_segment_display(ctx, x + segment_size * 2, y, hour % 10);  // Ones place of hour
+    draw_segment_display(ctx, x + segment_size * 4, y, minute / 10);  // Tens place of minute
+    draw_segment_display(ctx, x + segment_size * 6, y, minute % 10);  // Ones place of minute
 }
 
-static void update_time() {
-  // Get a tm structure
-  time_t temp = time(NULL);
-  struct tm *tick_time = localtime(&temp);
-
-  // Write the current hours and minutes into a buffer
-  static char s_buffer[8];
-  strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ?
-                                          "%H:%M" : "%I:%M", tick_time);
-
-  // Display this time on the TextLayer
-  text_layer_set_text(s_time_layer, s_buffer);
+// Window load function to initialize the watchface
+void window_load(Window *window) {
+    watchface_layer = layer_create(GRect(0, 0, 144, 168));  // Full screen size
+    layer_set_update_proc(watchface_layer, watchface_update_proc);
+    layer_add_child(window_get_root_layer(window), watchface_layer);
 }
 
-static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
-  update_time();
+// Window unload function to clean up
+void window_unload(Window *window) {
+    layer_destroy(watchface_layer);
 }
 
+int main(void) {
+    window = window_create();
+    window_set_window_handlers(window, (WindowHandlers) {
+        .load = window_load,
+        .unload = window_unload,
+    });
+    window_stack_push(window, true);
 
-static void init() {
-  // Create main Window element and assign to pointer
-  s_main_window = window_create();
-
-  // Set handlers to manage the elements inside the Window
-  window_set_window_handlers(s_main_window, (WindowHandlers) {
-    .load = main_window_load,
-    .unload = main_window_unload
-  });
-
-  // show the Window on the watch, with animated=false
-  window_stack_push(s_main_window, false);
-
-
-  // register with hardware TickTimerService
-  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
-
-  // get the correct time on initiation
-  update_time();
-}
-
-
-
-static void deinit() {
-  // Destroy Window
-  window_destroy(s_main_window);
-}
-
-int main() {
-  init();
-  app_event_loop();
-  deinit();
+    app_event_loop();
+    window_destroy(window);
 }
