@@ -1,13 +1,48 @@
 #include <pebble.h>
 
+#define LENGTH 12
+#define WIDTH 3
+#define TAIL true
+
+static const GPathInfo HORIZONTAL_CELL = {
+    6, (GPoint []){
+      {1, 0},
+      {11, 0},
+      {12, -1},
+      {11, -2},
+      {1, -2},
+      {0, -1}
+    }
+  };
+  
+  static const GPathInfo VERTICAL_CELL = {
+    6, (GPoint []){
+      {1, 0},
+      {2, -1},
+      {2, -11},
+      {1, -12},
+      {0, -11},
+      {0, -1}
+    }
+  };
+  
+  static const bool ILLUMINATION_TABLE[10][7] = {
+    //   a,    b,   c,     d,    e,    f,    g 
+    { true, true, true, true, true, true,false},   // 0
+    {false, true, true,false,false,false,false},   // 1          aaaa
+    { true, true,false, true, true,false, true},   // 2         f    b
+    { true, true, true, true,false,false, true},   // 3         f    b
+    {false, true, true,false,false, true, true},   // 4          gggg
+    { true,false, true, true,false, true, true},   // 5         e    c
+    { TAIL,false, true, true, true, true, true},   // 6         e    c
+    { true, true, true,false,false,false,false},   // 7          dddd 
+    { true, true, true, true, true, true, true},   // 8
+    { true, true, true, TAIL,false, true, true},   // 9
+  };
+
 // Declare the window and layer for the watchface
 Window *window;
 Layer *watchface_layer;
-
-// Size settings
-int segment_size = LENGTH;  // Default size for segments
-GColor segment_color = GColorBlack;  // Default segment color
-GColor background_color = GColorWhite;  // Default background color
 
 void draw_segment(GContext *ctx, bool is_on, GPoint origin, const GPathInfo *path_info) {
     if (is_on) {
@@ -25,66 +60,41 @@ void draw_digit(GContext *ctx, GPoint origin, int digit) {
     for (int segment = 0; segment < 7; segment++) {
         bool is_on = ILLUMINATION_TABLE[digit][segment];
 
-        // Get the segment's position based on the segment type and the base origin
-        GPoint segment_origin = origin;
-
         // Adjust the position for each segment (you can tune these based on your layout)
         switch (segment) {
             case 0:  // 'a' (horizontal)
-                segment_origin.y -= 10; // Move up for 'a'
-                draw_segment(ctx, is_on, segment_origin, &HORIZONTAL_CELL);
+                origin.y -= 10; // Move up for 'a'
+                draw_segment(ctx, is_on, origin, &HORIZONTAL_CELL);
                 break;
             case 1:  // 'b' (vertical)
-                segment_origin.x += 15;
-                draw_segment(ctx, is_on, segment_origin, &VERTICAL_CELL);
+                origin.x += 15;
+                draw_segment(ctx, is_on, origin, &VERTICAL_CELL);
                 break;
             case 2:  // 'c' (vertical)
-                segment_origin.x += 15;
-                segment_origin.y += 15;
-                draw_segment(ctx, is_on, segment_origin, &VERTICAL_CELL);
+                origin.x += 15;
+                origin.y += 15;
+                draw_segment(ctx, is_on, origin, &VERTICAL_CELL);
                 break;
             case 3:  // 'd' (horizontal)
-                segment_origin.y += 30;
-                draw_segment(ctx, is_on, segment_origin, &HORIZONTAL_CELL);
+                origin.y += 30;
+                draw_segment(ctx, is_on, origin, &HORIZONTAL_CELL);
                 break;
             case 4:  // 'e' (vertical)
-                segment_origin.x += 15;
-                segment_origin.y += 30;
-                draw_segment(ctx, is_on, segment_origin, &VERTICAL_CELL);
+                origin.x += 15;
+                origin.y += 30;
+                draw_segment(ctx, is_on, origin, &VERTICAL_CELL);
                 break;
             case 5:  // 'f' (vertical)
-                segment_origin.x += 15;
-                segment_origin.y += 15;
-                draw_segment(ctx, is_on, segment_origin, &VERTICAL_CELL);
+                origin.x += 15;
+                origin.y += 15;
+                draw_segment(ctx, is_on, origin, &VERTICAL_CELL);
                 break;
             case 6:  // 'g' (horizontal)
-                segment_origin.y += 20;
-                draw_segment(ctx, is_on, segment_origin, &HORIZONTAL_CELL);
+                origin.y += 20;
+                draw_segment(ctx, is_on, origin, &HORIZONTAL_CELL);
                 break;
         }
     }
-}
-
-void update_proc(Layer *layer, GContext *ctx) {
-    time_t now = time(NULL);
-    struct tm *tick_time = localtime(&now);
-
-    int hour = tick_time->tm_hour % 12;  // 12-hour format
-    int minute = tick_time->tm_min;
-
-    // The origin for each digit (position on screen)
-    GPoint positions[4] = {
-        {20, 40},  // Position for first digit (tens of hour)
-        {50, 40},  // Position for second digit (ones of hour)
-        {80, 40},  // Position for first digit (tens of minute)
-        {110, 40}, // Position for second digit (ones of minute)
-    };
-
-    // Draw each digit
-    draw_digit(ctx, positions[0], hour / 10);   // Tens place of hour
-    draw_digit(ctx, positions[1], hour % 10);   // Ones place of hour
-    draw_digit(ctx, positions[2], minute / 10); // Tens place of minute
-    draw_digit(ctx, positions[3], minute % 10); // Ones place of minute
 }
 
 // Function to update the watchface
@@ -103,19 +113,20 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     int height = bounds.size.h; // Height of the layer (screen)
     
     // Calculate the positions for drawing the segments (centered)
-    int x = (screen_width - (segment_size * 3)) / 2;
-    int y = (screen_height - segment_size) / 2;
+    int x = (width - (LENGTH * 3)) / 2;
+    int y = (height - LENGTH) / 2;
     
     // Draw digits (for now, just one for demonstration)
-    draw_segment_display(ctx, x, y, hour / 10);  // Tens place of hour
-    draw_segment_display(ctx, x + segment_size * 2, y, hour % 10);  // Ones place of hour
-    draw_segment_display(ctx, x + segment_size * 4, y, minute / 10);  // Tens place of minute
-    draw_segment_display(ctx, x + segment_size * 6, y, minute % 10);  // Ones place of minute
+    draw_segment(ctx, GPoint(x, y), hour / 10);  // Tens place of hour
+    draw_segment(ctx, GPoint(x + 15, y), hour % 10);  // Ones place of hour
+    draw_segment(ctx, GPoint(x + 30, y), minute / 10);  // Tens place of minute
+    draw_segment(ctx, GPoint(x + 45, y), minute % 10);  // Ones place of minute
 }
 
 // Window load function to initialize the watchface
 void window_load(Window *window) {
-    watchface_layer = layer_create(GRect(0, 0, 144, 168));  // Full screen size
+    GRect bounds = layer_get_bounds(layer);
+    watchface_layer = layer_create(GRect(0, 0, bounds.size.w, bounds.size.h));  // Full screen size
     layer_set_update_proc(watchface_layer, watchface_update_proc);
     layer_add_child(window_get_root_layer(window), watchface_layer);
 }
