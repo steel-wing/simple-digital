@@ -202,12 +202,12 @@ int number_width(int length, int width, int spacing, int digit) {
     if (digit == 1) {
         return width;
     } else if (digit == 3 || digit == 7) {
-        return length + spacing + width / 2;
+        return length + spacing + (width - 1) / 2;
     } else {
-        return length + 2 * (spacing + width / 2);
+        return length + 2 * (spacing + (width - 1) / 2);
     }
 }
 
 int number_height(int length, int width, int spacing, int digit) {
-    return 2 * length + 3 * width + 2 * width + 4 * spacing;
+    return 2 * length + width + 4 * spacing;
 }
