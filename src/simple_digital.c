@@ -2,6 +2,7 @@
 
 #define LENGTH 12 
 #define WIDTH 3     // has to be odd in order to look good. Unfortunately
+#define GAP 4
 #define SPACING 1
 #define T true      // the tail on the 6 and the 9
 
@@ -42,23 +43,23 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     int standard_height = number_height(LENGTH, WIDTH, SPACING, 0);
 
     // Calculate the positions for drawing the segments (centered)
-    int x = (width - 2 * standard_width + 1) / 2;
+    int x = (width - 4 * standard_width +  5 * SPACING + 1) / 2;
     int y = (height - standard_height + 1) / 2;
 
     // Draw digits (for now, just one for demonstration)
     GPoint drawpoint = GPoint(x, y);
 
     draw_digit(ctx, drawpoint, hour / 10);  // Tens place of hour
-    drawpoint.x += standard_width + width;
+    drawpoint.x += standard_width + WIDTH;
 
     draw_digit(ctx, drawpoint, hour % 10);  // Ones place of hour
-    drawpoint.x += standard_width + 3 * width;
+    drawpoint.x += standard_width + 3 * WIDTH;
 
     draw_digit(ctx, drawpoint, minute / 10);  // Tens place of minute
-    drawpoint.x += standard_width + width;
+    drawpoint.x += standard_width + WIDTH;
 
     draw_digit(ctx, drawpoint, minute % 10);  // Ones place of minute
-    drawpoint.x += standard_width + width;
+    drawpoint.x += standard_width + WIDTH;
 }
 
 // clear out the stuff for time reception? not really sure about this one
