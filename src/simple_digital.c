@@ -20,9 +20,9 @@ static const GPathInfo HORIZONTAL_CELL;
 GRect window_get_unobstructed_area(Window *win);
 
 // draws a single segment
-void draw_segment(GContext *ctx, bool is_on, GPoint origin, const GPathInfo *path_info) {
+void draw_segment(GContext *ctx, bool active, GPoint origin, const GPathInfo *path_info) {
     // only draw this if we should
-    if (is_on) {
+    if (active) {
         // generate a path and and move it's origin to the origin point given
         GPath *path = gpath_create(path_info);
         gpath_move_to(path, origin);
@@ -106,7 +106,12 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     // get current time
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
-   // bool military = clock_is_24h_style();
+    bool military = clock_is_24h_style();
+
+    // get the right hour digits
+    if (!military) {
+        t->tm_hour = t->tm_hour % 12;
+    }
     
     // break it down
     int h1 = t->tm_hour / 10;
@@ -123,30 +128,42 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     graphics_context_set_fill_color(ctx, BACKGROUND);
     graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
-    // get number dimensions
+    // figure out initial spacing
     int num_w = number_width(LENGTH, WIDTH, SPACING, 0);
     int num_h = number_height(LENGTH, WIDTH, SPACING, 0);
+    int first_w = number_width(LENGTH, WIDTH, SPACING, h1);
+    if (!military && h1 == 0) {
+        first_w = number_width(LENGTH, WIDTH, SPACING, h2);
+    }
 
-    // find point to begin drawing from (currently assuming 00:00)
-    int x = width / 2 - (4 * (num_w + GAP) + WIDTH) / 2; // half of: screen minus (4 numbers, 4 gaps, and a colon (WIDTH)
-    int y = height / 2 - (num_h) / 2;
+    // hh:mm assumption
+    int exact_w = first_w + 3 * num_w + WIDTH + 4 * GAP;
+    int correction = num_w - first_w;
 
+    int x = (width - exact_w) / 2 - correction;
+    int y = height / 2 - num_h / 2;
 
-    // handle military time and leading digits
-    // if (military) {
-        GPoint drawpoint = GPoint(x, y);
+    // set start point for four digits
+    GPoint drawpoint = GPoint(x, y);
 
+    // handle two digit hours
+    if (military || h1 != 0) {
+        draw_digit(ctx, drawpoint, h1);
+        drawpoint.x += num_w + GAP;
+        draw_digit(ctx, drawpoint, h2);
+    } else {
+        // handle single-digit hours
+        drawpoint.x += (num_w + GAP) / 2;
+        draw_digit(ctx, drawpoint, h2);
+    }
 
-    draw_digit(ctx, drawpoint, h1); //hour / 10);
-    drawpoint.x += num_w + GAP;
-
-    draw_digit(ctx, drawpoint, h2); //hour % 10);
     drawpoint.x += num_w + 2 * GAP + WIDTH;
+    // colon in here
 
-    draw_digit(ctx, drawpoint, m1); //minute / 10);
+    draw_digit(ctx, drawpoint, m1);
     drawpoint.x += num_w + GAP;
 
-    draw_digit(ctx, drawpoint, m2); //minute % 10);
+    draw_digit(ctx, drawpoint, m2);
     drawpoint.x += num_w + GAP;
 }
 
