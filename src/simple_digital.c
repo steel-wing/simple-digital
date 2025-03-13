@@ -110,7 +110,13 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
 
     // get the right hour digits
     if (!military) {
-        t->tm_hour = t->tm_hour % 12;
+        // 13:00 - 23:00 -> 1:00 - 11:00
+        if (t->tm_hour > 12) {
+            t->tm_hour -= 12;
+        // 0:00 -> 12:00
+        } else if (t->tm_hour == 0) {
+            t->tm_hour += 12;
+        }
     }
     
     // break it down
@@ -151,8 +157,9 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
         draw_digit(ctx, drawpoint, h1);
         drawpoint.x += num_w + GAP;
         draw_digit(ctx, drawpoint, h2);
+        
+    // handle single-digit hours
     } else {
-        // handle single-digit hours
         drawpoint.x += (num_w + GAP) / 2;
         draw_digit(ctx, drawpoint, h2);
     }
