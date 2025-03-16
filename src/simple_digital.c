@@ -5,8 +5,8 @@
 #define GAP 4
 #define SPACING 1
 #define T true      // the tail on the 6 and the 9
-#define BACKGROUND GColorWhite
-#define FOREGROUND GColorBlack
+#define BACKGROUND GColorBlack
+#define FOREGROUND GColorWhite
 
 // important variables for below
 Window *window;
@@ -15,7 +15,6 @@ Layer *watchface_layer;
 static const bool ILLUMINATION_TABLE[10][7];
 static const GPathInfo VERTICAL_CELL;
 static const GPathInfo HORIZONTAL_CELL;
-
 
 GRect window_get_unobstructed_area(Window *win);
 
@@ -130,7 +129,7 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     int width = bounds.size.w;
     int height = bounds.size.h;
 
-    // set background color)
+    // set background color
     graphics_context_set_fill_color(ctx, BACKGROUND);
     graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
@@ -146,7 +145,7 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     int exact_w = first_w + 3 * num_w + WIDTH + 4 * GAP;
     int correction = num_w - first_w;
 
-    int x = (width - exact_w) / 2 - correction;
+    int x = (width - exact_w) / 2 - correction + 1;
     int y = height / 2 - num_h / 2;
 
     // set start point for four digits
