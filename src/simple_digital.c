@@ -1,12 +1,32 @@
 #include <pebble.h>
 
+#define SETTINGS_KEY 1 // persistent storage key
+
 #define LENGTH 12 
 #define WIDTH 3     // has to be odd in order to look good, unfortunately
 #define GAP 4
 #define SPACING 1
 #define T true      // the tail on the 6 and the 9
-#define BACKGROUND GColorBlack
-#define FOREGROUND GColorWhite
+
+// define our settings struct
+typedef struct ClaySettings {
+	GColor bg_color, fg_color;
+} ClaySettings; 
+
+// an instance of the struct
+static ClaySettings settings;
+
+// default values
+static void config_default() {
+	settings.bg_color = GColorBlack;
+	settings.fg_color = GColorWhite;
+}
+
+// load settings
+static void config_load() {
+	config_default();   // default
+	persist_read_data(SETTINGS_KEY, &settings, sizeof(settings)); // read settings from persistent storage, if they exist
+}
 
 // important variables for below
 Window *window;
@@ -27,7 +47,7 @@ void draw_segment(GContext *ctx, bool active, GPoint origin, const GPathInfo *pa
         gpath_move_to(path, origin);
 
         // make the fill color black (we aren't doing a stroke here)
-        graphics_context_set_fill_color(ctx, FOREGROUND);
+        graphics_context_set_fill_color(ctx, settings.fg_color);
 
         // actually draw the path with the points provided
         gpath_draw_filled(ctx, path);
@@ -130,7 +150,7 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     int height = bounds.size.h;
 
     // set background color
-    graphics_context_set_fill_color(ctx, BACKGROUND);
+    graphics_context_set_fill_color(ctx, settings.bg_color);
     graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
     // figure out initial spacing
@@ -173,10 +193,31 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     drawpoint.x += num_w + GAP;
 }
 
+
+
+static void received(DictionaryIterator *di, void *ctx) {
+    // colors
+    Tuple *tuple;
+
+	if ((tuple = dict_find(di, MESSAGE_KEY_BACKGROUND)))
+		settings.bg_color = GColorFromHEX(tuple->value->int32);
+
+	if ((tuple = dict_find(di, MESSAGE_KEY_FOREGROUND)))
+        settings.fg_color = GColorFromHEX(tuple->value->int32);
+
+    // sizes
+
+    // location
+
+    // toggles
+    persist_write_data(SETTINGS_KEY, &settings, sizeof settings);
+}
+
+
 // clear out the stuff for time reception? not really sure about this one
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
     layer_mark_dirty(window_get_root_layer(window));
-  }
+}
 
 // window load function to initialize the watchface
 void window_load(Window *window) {
@@ -197,12 +238,20 @@ void window_unload(Window *window) {
 
 // init() to handle everything that has to get done at the startt
 static void init() {
+    // get settings
+	config_load();
+
+    // construct window and get it into position
     window = window_create();
     window_set_window_handlers(window, (WindowHandlers) {
         .load = window_load,
         .unload = window_unload,
     });
     window_stack_push(window, true);
+
+    // get settings info from the inbox
+    app_message_register_inbox_received(received);
+	app_message_open(256, 256);
 
     // subscribe us to the minute service (could make this seconds later)
     tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);

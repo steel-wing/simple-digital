@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "author": "MainFrame",
+  "private": true,
+  "dependencies": {
+    "pebble-clay": "^1.0.4"
+  },
+  "keywords": [
+    "pebble-watchface",
+    "simple",
+    "digital",
+    "minimalist"
+  ],
+  "pebble": {
+    "sdkVersion": "3",
+    "resources": {
+      "media": []
+    },
+    "projectType": "native",
+    "uuid": "98773884-a18d-4ef4-bf7c-ddfc035aad08",
+    "messageKeys": [
+      "BACKGROUND",
+      "FOREGROUND"
+    ],
+    "enableMultiJS": true,
+    "displayName": "Simple Digital",
+    "watchapp": {
+      "onlyShownOnCommunication": false,
+      "hiddenApp": false,
+      "watchface": true
+    },
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite"
+    ],
+    "capabilities": [
+      "configurable"
+    ]
+  },
+  "name": "simple-digital"
+}
