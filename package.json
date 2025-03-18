@@ -1,7 +1,5 @@
 {
-  "version": "2.0.0",
   "author": "MainFrame",
-  "private": true,
   "dependencies": {
     "pebble-clay": "^1.0.4"
   },
@@ -11,33 +9,41 @@
     "digital",
     "minimalist"
   ],
+  "name": "simple-digital",
   "pebble": {
-    "sdkVersion": "3",
-    "resources": {
-      "media": []
-    },
-    "projectType": "native",
-    "uuid": "98773884-a18d-4ef4-bf7c-ddfc035aad08",
-    "messageKeys": [
-      "BACKGROUND",
-      "FOREGROUND"
+    "displayName": "Simple Digital",
+    "capabilities": [
+    "configurable"
     ],
     "enableMultiJS": true,
-    "displayName": "Simple Digital",
-    "watchapp": {
-      "onlyShownOnCommunication": false,
-      "hiddenApp": false,
-      "watchface": true
+    "messageKeys": [
+      "BackgroundColor",
+      "ForegroundColor"
+    ],
+    "projectType": "native",
+    "resources": {
+      "media": [
+        {
+          "file": "images/MenuImage.png",
+          "menuIcon": true,
+          "name": "IMAGE_MENU_IMAGE",
+          "storageFormat": "png",
+          "targetPlatforms": null,
+          "type": "bitmap"
+        }
+      ]
     },
+    "sdkVersion": "3",
     "targetPlatforms": [
       "aplite",
       "basalt",
       "chalk",
       "diorite"
     ],
-    "capabilities": [
-      "configurable"
-    ]
+    "uuid": "98773884-a18d-4ef4-bf7c-ddfc035aad08",
+    "watchapp": {
+      "watchface": true
+    }
   },
-  "name": "simple-digital"
+  "version": "2.0.0"
 }

@@ -5,7 +5,7 @@ module.exports = [
     },
     {
         "type": "text",
-        "defaultValue": "The cleanest watchface around."
+        "defaultValue": "The cleanest digital watchface around."
     },
     {
         "type": "section",
@@ -15,19 +15,24 @@ module.exports = [
             "defaultValue": "Colors"
         },
         {
+            "label": "Background Color",
             "type": "color",
-            "messageKey": "BACKGROUND",
+            "messageKey": "BackgroundColor",
             "defaultValue": "0x000000",
-            "allowGray": true,
-            "label": "Background Color"
+            "allowGray": true
         },
         {
+            
+            "label": "Text Color",
             "type": "color",
-            "messageKey": "FOREGROUND",
+            "messageKey": "ForegroundColor",
             "defaultValue": "0xFFFFFF",
-            "allowGray": true,
-            "label": "Text Color"
+            "allowGray": true
         }
         ]
-    }
-]
+    },
+	{
+		"type": "submit",
+		"defaultValue": "Save"
+	}
+];

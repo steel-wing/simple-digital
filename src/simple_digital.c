@@ -1,6 +1,5 @@
 #include <pebble.h>
-
-#define SETTINGS_KEY 1 // persistent storage key
+#include "config.h"
 
 #define LENGTH 12 
 #define WIDTH 3     // has to be odd in order to look good, unfortunately
@@ -8,29 +7,18 @@
 #define SPACING 1
 #define T true      // the tail on the 6 and the 9
 
-// define our settings struct
-typedef struct ClaySettings {
-	GColor bg_color, fg_color;
-} ClaySettings; 
+// important variables for below
+Window *window;
+Layer *watchface_layer;
 
 // an instance of the struct
 static ClaySettings settings;
 
 // default values
 static void config_default() {
-	settings.bg_color = GColorBlack;
-	settings.fg_color = GColorWhite;
+	settings.BackgroundColor = GColorBlack;
+	settings.ForegroundColor = GColorWhite;
 }
-
-// load settings
-static void config_load() {
-	config_default();   // default
-	persist_read_data(SETTINGS_KEY, &settings, sizeof(settings)); // read settings from persistent storage, if they exist
-}
-
-// important variables for below
-Window *window;
-Layer *watchface_layer;
 
 static const bool ILLUMINATION_TABLE[10][7];
 static const GPathInfo VERTICAL_CELL;
@@ -39,7 +27,7 @@ static const GPathInfo HORIZONTAL_CELL;
 GRect window_get_unobstructed_area(Window *win);
 
 // draws a single segment
-void draw_segment(GContext *ctx, bool active, GPoint origin, const GPathInfo *path_info) {
+static void draw_segment(GContext *ctx, bool active, GPoint origin, const GPathInfo *path_info) {
     // only draw this if we should
     if (active) {
         // generate a path and and move it's origin to the origin point given
@@ -47,7 +35,7 @@ void draw_segment(GContext *ctx, bool active, GPoint origin, const GPathInfo *pa
         gpath_move_to(path, origin);
 
         // make the fill color black (we aren't doing a stroke here)
-        graphics_context_set_fill_color(ctx, settings.fg_color);
+        graphics_context_set_fill_color(ctx, settings.ForegroundColor);
 
         // actually draw the path with the points provided
         gpath_draw_filled(ctx, path);
@@ -58,7 +46,7 @@ void draw_segment(GContext *ctx, bool active, GPoint origin, const GPathInfo *pa
 }
 
 // draws a single digit
-void draw_digit(GContext *ctx, GPoint number_origin, int digit) {
+static void draw_digit(GContext *ctx, GPoint number_origin, int digit) {
     // iterate across all 7 segments
     for (int segment = 0; segment < 7; segment++) {
         bool is_on = ILLUMINATION_TABLE[digit][segment];
@@ -121,7 +109,7 @@ int number_height(int length, int width, int spacing, int digit) {
 }
 
 // update the watchface (runs every time-> call)
-void watchface_update_proc(Layer *layer, GContext *ctx) {
+void watchface_update(Layer *layer, GContext *ctx) {
     // get current time
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
@@ -150,7 +138,7 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     int height = bounds.size.h;
 
     // set background color
-    graphics_context_set_fill_color(ctx, settings.bg_color);
+    graphics_context_set_fill_color(ctx, settings.BackgroundColor);
     graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
     // figure out initial spacing
@@ -193,27 +181,6 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     drawpoint.x += num_w + GAP;
 }
 
-
-
-static void received(DictionaryIterator *di, void *ctx) {
-    // colors
-    Tuple *tuple;
-
-	if ((tuple = dict_find(di, MESSAGE_KEY_BACKGROUND)))
-		settings.bg_color = GColorFromHEX(tuple->value->int32);
-
-	if ((tuple = dict_find(di, MESSAGE_KEY_FOREGROUND)))
-        settings.fg_color = GColorFromHEX(tuple->value->int32);
-
-    // sizes
-
-    // location
-
-    // toggles
-    persist_write_data(SETTINGS_KEY, &settings, sizeof settings);
-}
-
-
 // clear out the stuff for time reception? not really sure about this one
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
     layer_mark_dirty(window_get_root_layer(window));
@@ -227,7 +194,7 @@ void window_load(Window *window) {
 
     // construct the layer and set up its update proceedures
     watchface_layer = layer_create(bounds);
-    layer_set_update_proc(watchface_layer, watchface_update_proc);
+    layer_set_update_proc(watchface_layer, watchface_update);
     layer_add_child(window_get_root_layer(window), watchface_layer);
 }
 
@@ -238,8 +205,7 @@ void window_unload(Window *window) {
 
 // init() to handle everything that has to get done at the startt
 static void init() {
-    // get settings
-	config_load();
+    config_default();
 
     // construct window and get it into position
     window = window_create();
@@ -248,10 +214,6 @@ static void init() {
         .unload = window_unload,
     });
     window_stack_push(window, true);
-
-    // get settings info from the inbox
-    app_message_register_inbox_received(received);
-	app_message_open(256, 256);
 
     // subscribe us to the minute service (could make this seconds later)
     tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
