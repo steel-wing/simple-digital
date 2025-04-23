@@ -4,5 +4,5 @@ When I got my first pebble smartwatch for Christmas in in 2016, it was a dream c
 ## Functioning Screenshot
 ![origin](https://github.com/user-attachments/assets/00fd1429-fae9-4c04-a079-1514f83c583d)
 
-## Detials
+## Details
 The watchface simulates a 7-segment display, as shown. The numbers are auto-centered, and the lengths and thicknesses of the individual cells are parameterized (cell width has to be odd, though. See [Total Digital](https://github.com/steel-wing/total-digital) for more customization). Numbers and background can be colored, military time is supported, and you can even choose to disable the "tail" on the 6 and the 9, if you so choose.
