@@ -4,18 +4,20 @@
 #define WIDTH 3     // has to be odd in order to look good, unfortunately
 #define GAP 4
 #define SPACING 1
-#define T true      // the tail on the 6 and the 9
-#define BACKGROUND GColorWhite
-#define FOREGROUND GColorBlack
+#define S 1         // the tail on the 6
+#define N 1         // the tail on the 9
+#define BACKGROUND GColorBlack
+#define FOREGROUND GColorWhite
 
 // important variables for below
 Window *window;
 Layer *watchface_layer;
 
+// this may be bad practice, but I just wanted the big statics at the bottom, okay?
 static const bool ILLUMINATION_TABLE[10][7];
+static const GPathInfo COLON_CELL;
 static const GPathInfo VERTICAL_CELL;
 static const GPathInfo HORIZONTAL_CELL;
-
 
 GRect window_get_unobstructed_area(Window *win);
 
@@ -38,7 +40,7 @@ void draw_segment(GContext *ctx, bool active, GPoint origin, const GPathInfo *pa
     }
 }
 
-// draws a single digit
+// draws a single digit. GPoint is top left corner of box
 void draw_digit(GContext *ctx, GPoint number_origin, int digit) {
     // iterate across all 7 segments
     for (int segment = 0; segment < 7; segment++) {
@@ -83,6 +85,22 @@ void draw_digit(GContext *ctx, GPoint number_origin, int digit) {
                 break;
         }
     }
+}
+
+// draws the colon
+void draw_colon(GContext *ctx, GPoint colon_origin) {
+    bool illuminate = true;
+
+    // make a copy so we don't ruin anything
+    GPoint origin = colon_origin;
+
+    // little bit of math to center the dots the way I want
+    origin.y += WIDTH / 2 + SPACING + LENGTH / 2;
+
+    draw_segment(ctx, illuminate, origin, &COLON_CELL);
+    origin.y += WIDTH + LENGTH - 2 * SPACING;
+
+    draw_segment(ctx, illuminate, origin, &COLON_CELL);
 }
 
 // function for calculating the width of a number based on parameters 
@@ -130,16 +148,19 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     int width = bounds.size.w;
     int height = bounds.size.h;
 
-    // set background color)
+    // set background color
     graphics_context_set_fill_color(ctx, BACKGROUND);
     graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
     // figure out initial spacing
     int num_w = number_width(LENGTH, WIDTH, SPACING, 0);
     int num_h = number_height(LENGTH, WIDTH, SPACING, 0);
-    int first_w = number_width(LENGTH, WIDTH, SPACING, h1);
+    int first_w;
+
     if (!military && h1 == 0) {
         first_w = number_width(LENGTH, WIDTH, SPACING, h2);
+    } else {
+        first_w = number_width(LENGTH, WIDTH, SPACING, h1);
     }
 
     // hh:mm assumption
@@ -156,22 +177,23 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     if (military || h1 != 0) {
         draw_digit(ctx, drawpoint, h1);
         drawpoint.x += num_w + GAP;
-        draw_digit(ctx, drawpoint, h2);
         
     // handle single-digit hours
     } else {
         drawpoint.x += (num_w + GAP) / 2;
-        draw_digit(ctx, drawpoint, h2);
     }
 
-    drawpoint.x += num_w + 2 * GAP + WIDTH;
-    // colon in here
+    // write the rest of the time
+    draw_digit(ctx, drawpoint, h2);
+    drawpoint.x += num_w + GAP;
+
+    draw_colon(ctx, drawpoint);
+    drawpoint.x += WIDTH + GAP;
 
     draw_digit(ctx, drawpoint, m1);
     drawpoint.x += num_w + GAP;
 
     draw_digit(ctx, drawpoint, m2);
-    drawpoint.x += num_w + GAP;
 }
 
 // clear out the stuff for time reception? not really sure about this one
@@ -221,8 +243,19 @@ int main(void) {
     deinit();
 }
 
-// path for a horizontal cell (dynamic to the #define's above)
+// path for single colon cell
+static const GPathInfo COLON_CELL = {
+    4, (GPoint []){
+        {((WIDTH - 1) / 2), 0 - 1},
+        {(WIDTH), ((WIDTH - 1) / 2)},
+        {((WIDTH - 1) / 2), WIDTH},
+        {0 - 1, ((WIDTH - 1) / 2)}
+    }
+  };
+
+// path for a horizontal cell
 static const GPathInfo HORIZONTAL_CELL = {
+    // arcane math to counter pebble's awful line drawing script
     6, (GPoint []){
         {((WIDTH - 1) / 2) - 1, 0},
         {(LENGTH - (WIDTH - 1) / 2), 0},
@@ -233,8 +266,9 @@ static const GPathInfo HORIZONTAL_CELL = {
     }
   };
 
-// path for a vertical cell (dynamic to the #define's above)
+// path for a vertical cell
 static const GPathInfo VERTICAL_CELL = {
+    // arcane math to counter pebble's awful line drawing script
     6, (GPoint []){
         {((WIDTH - 1) / 2), -1},
         {(WIDTH), ((WIDTH - 1) / 2)},
@@ -247,6 +281,8 @@ static const GPathInfo VERTICAL_CELL = {
 
 // how we decide which cells to illuminate for which digits
 static const bool ILLUMINATION_TABLE[10][7] = {
+// yes I know these are the wrong datatypes but this looks better
+
 //   a, b, c, d, e, f, g 
     {1, 1, 1, 1, 1, 1, 0},   // 0
     {0, 1, 1, 0, 0, 0, 0},   // 1          aaaa
@@ -254,8 +290,8 @@ static const bool ILLUMINATION_TABLE[10][7] = {
     {1, 1, 1, 1, 0, 0, 1},   // 3         f    b
     {0, 1, 1, 0, 0, 1, 1},   // 4          gggg
     {1, 0, 1, 1, 0, 1, 1},   // 5         e    c
-    {T, 0, 1, 1, 1, 1, 1},   // 6         e    c
+    {S, 0, 1, 1, 1, 1, 1},   // 6         e    c
     {1, 1, 1, 0, 0, 0, 0},   // 7          dddd 
     {1, 1, 1, 1, 1, 1, 1},   // 8
-    {1, 1, 1, T, 0, 1, 1},   // 9
+    {1, 1, 1, N, 0, 1, 1},   // 9
 };
