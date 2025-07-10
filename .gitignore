@@ -1,3 +1,5 @@
 build
 /.lock-waf_linux2_build
 .vscode
+node_modules/
+

@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include "config.h"
 
 #define LENGTH 12 
 #define WIDTH 3     // has to be odd in order to look good, unfortunately
@@ -22,7 +23,7 @@ static const GPathInfo HORIZONTAL_CELL;
 GRect window_get_unobstructed_area(Window *win);
 
 // draws a single segment
-void draw_segment(GContext *ctx, bool active, GPoint origin, const GPathInfo *path_info) {
+static void draw_segment(GContext *ctx, bool active, GPoint origin, const GPathInfo *path_info) {
     // only draw this if we should
     if (active) {
         // generate a path and and move it's origin to the origin point given
@@ -30,7 +31,7 @@ void draw_segment(GContext *ctx, bool active, GPoint origin, const GPathInfo *pa
         gpath_move_to(path, origin);
 
         // make the fill color black (we aren't doing a stroke here)
-        graphics_context_set_fill_color(ctx, FOREGROUND);
+        graphics_context_set_fill_color(ctx, settings.ForegroundColor);
 
         // actually draw the path with the points provided
         gpath_draw_filled(ctx, path);
@@ -120,7 +121,7 @@ int number_height(int length, int width, int spacing, int digit) {
 }
 
 // update the watchface (runs every time-> call)
-void watchface_update_proc(Layer *layer, GContext *ctx) {
+void watchface_update(Layer *layer, GContext *ctx) {
     // get current time
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
@@ -167,7 +168,7 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
     int exact_w = first_w + 3 * num_w + WIDTH + 4 * GAP;
     int correction = num_w - first_w;
 
-    int x = (width - exact_w) / 2 - correction;
+    int x = (width - exact_w) / 2 - correction + 1;
     int y = height / 2 - num_h / 2;
 
     // set start point for four digits
@@ -199,7 +200,7 @@ void watchface_update_proc(Layer *layer, GContext *ctx) {
 // clear out the stuff for time reception? not really sure about this one
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
     layer_mark_dirty(window_get_root_layer(window));
-  }
+}
 
 // window load function to initialize the watchface
 void window_load(Window *window) {
@@ -209,7 +210,7 @@ void window_load(Window *window) {
 
     // construct the layer and set up its update proceedures
     watchface_layer = layer_create(bounds);
-    layer_set_update_proc(watchface_layer, watchface_update_proc);
+    layer_set_update_proc(watchface_layer, watchface_update);
     layer_add_child(window_get_root_layer(window), watchface_layer);
 }
 
@@ -220,6 +221,9 @@ void window_unload(Window *window) {
 
 // init() to handle everything that has to get done at the startt
 static void init() {
+    config_default();
+
+    // construct window and get it into position
     window = window_create();
     window_set_window_handlers(window, (WindowHandlers) {
         .load = window_load,
