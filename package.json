@@ -1,26 +1,23 @@
 {
+  "name": "simpledigital",
   "author": "MainFrame",
-  "dependencies": {
-    "pebble-clay": "^1.0.4"
-  },
+  "version": "2.0",
   "keywords": [
     "pebble-watchface",
+    "hackathon",
+    "hackathon2",
     "simple",
     "digital",
-    "minimalist"
+    "repebble",
+    "retro"
   ],
-  "name": "simple-digital",
+  "private": false,
   "pebble": {
+    "uuid": "98773884-a18d-4ef4-bf7c-ddfc035aad08",
     "displayName": "Simple Digital",
-    "capabilities": [
-    "configurable"
-    ],
-    "enableMultiJS": true,
-    "messageKeys": [
-      "BackgroundColor",
-      "ForegroundColor"
-    ],
-    "projectType": "native",
+    "watchapp": {
+      "watchface": true
+    },
     "resources": {
       "media": [
         {
@@ -33,17 +30,13 @@
         }
       ]
     },
-    "sdkVersion": "3",
     "targetPlatforms": [
       "aplite",
       "basalt",
       "chalk",
-      "diorite"
+      "diorite",
+      "emery"
     ],
-    "uuid": "98773884-a18d-4ef4-bf7c-ddfc035aad08",
-    "watchapp": {
-      "watchface": true
-    }
-  },
-  "version": "2.0.0"
+    "sdkVersion": "3"
+  }
 }
