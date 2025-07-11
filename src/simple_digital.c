@@ -1,17 +1,13 @@
 #include <pebble.h>
 
-#define LENGTH 12 
+#define LENGTH 12   // length of a cell, tip to tip
 #define WIDTH 3     // has to be odd in order to look good, unfortunately
-#define GAP 4
-#define SPACING 1
+#define GAP 4       // gap between numbers
+#define SPACING 1   // gap between cells (taxicab)
 #define S 1         // the tail on the 6
 #define N 1         // the tail on the 9
 #define BACKGROUND GColorBlack
 #define FOREGROUND GColorWhite
-
-// important variables for below
-Window *window;
-Layer *watchface_layer;
 
 // this may be bad practice, but I just wanted the big statics at the bottom, okay?
 static const bool ILLUMINATION_TABLE[10][7];
@@ -19,10 +15,13 @@ static const GPathInfo COLON_CELL;
 static const GPathInfo VERTICAL_CELL;
 static const GPathInfo HORIZONTAL_CELL;
 
+// important variables for below
+Window *window;
+Layer *watchface_layer;
 GRect window_get_unobstructed_area(Window *win);
 
-// draws a single segment
-static void draw_segment(GContext *ctx, bool active, GPoint origin, const GPathInfo *path_info) {
+// draws a single cell
+static void draw_cell(GContext *ctx, bool active, GPoint origin, const GPathInfo *path_info) {
     // only draw this if we should
     if (active) {
         // generate a path and and move it's origin to the origin point given
@@ -53,41 +52,41 @@ void draw_digit(GContext *ctx, GPoint number_origin, int digit) {
         switch (segment) {
             case 0:  // 'a' (horizontal)
                 origin.x += WIDTH / 2 + SPACING;
-                draw_segment(ctx, is_on, origin, &HORIZONTAL_CELL);
+                draw_cell(ctx, is_on, origin, &HORIZONTAL_CELL);
                 break;
             case 1:  // 'b' (vertical)
                 origin.x += (LENGTH - 1) + 2 * SPACING;
                 origin.y += WIDTH / 2 + SPACING;
-                draw_segment(ctx, is_on, origin, &VERTICAL_CELL);
+                draw_cell(ctx, is_on, origin, &VERTICAL_CELL);
                 break;
             case 2:  // 'c' (vertical)
                 origin.x += (LENGTH - 1) + 2 * SPACING;
                 origin.y += (LENGTH - 1) + 3 * SPACING + WIDTH / 2;
-                draw_segment(ctx, is_on, origin, &VERTICAL_CELL);
+                draw_cell(ctx, is_on, origin, &VERTICAL_CELL);
                 break;
             case 3:  // 'd' (horizontal)
                 origin.x += WIDTH / 2 + SPACING;
                 origin.y += 2 * (LENGTH - 1) + 4 * SPACING;
-                draw_segment(ctx, is_on, origin, &HORIZONTAL_CELL);
+                draw_cell(ctx, is_on, origin, &HORIZONTAL_CELL);
                 break;
             case 4:  // 'e' (vertical)
                 origin.y += (LENGTH - 1) + 3 * SPACING + WIDTH / 2;
-                draw_segment(ctx, is_on, origin, &VERTICAL_CELL);
+                draw_cell(ctx, is_on, origin, &VERTICAL_CELL);
                 break;
             case 5:  // 'f' (vertical)
                 origin.y += WIDTH / 2 + SPACING;
-                draw_segment(ctx, is_on, origin, &VERTICAL_CELL);
+                draw_cell(ctx, is_on, origin, &VERTICAL_CELL);
                 break;
             case 6:  // 'g' (horizontal)
                 origin.x += WIDTH / 2 + SPACING;
                 origin.y += (LENGTH - 1) + 2 * SPACING;
-                draw_segment(ctx, is_on, origin, &HORIZONTAL_CELL);
+                draw_cell(ctx, is_on, origin, &HORIZONTAL_CELL);
                 break;
         }
     }
 }
 
-// draws the colon
+// draws the colon. GPoint is top left corner, if it were number height
 void draw_colon(GContext *ctx, GPoint colon_origin) {
     bool illuminate = true;
 
@@ -97,10 +96,10 @@ void draw_colon(GContext *ctx, GPoint colon_origin) {
     // little bit of math to center the dots the way I want
     origin.y += WIDTH / 2 + SPACING + LENGTH / 2 - 1;
 
-    draw_segment(ctx, illuminate, origin, &COLON_CELL);
+    draw_cell(ctx, illuminate, origin, &COLON_CELL);
     origin.y += WIDTH + LENGTH - 2 * SPACING - 1;
 
-    draw_segment(ctx, illuminate, origin, &COLON_CELL);
+    draw_cell(ctx, illuminate, origin, &COLON_CELL);
 }
 
 // function for calculating the width of a number based on parameters 
@@ -228,7 +227,7 @@ static void init() {
     });
     window_stack_push(window, true);
 
-    // subscribe us to the minute service (could make this seconds later)
+    // subscribe us to the minute service
     tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 } 
 

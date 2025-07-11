@@ -1,8 +1,8 @@
 # Simple Digital
-When I got my first pebble smartwatch for Christmas in in 2016, it was a dream come true. I immediately went to the Pebble store to download the simplest and cleanest digital watchface around, except there were none that looked quite like what I had wanted. I then learned JavaScript to build my own, which has been on the store ever since. However, JavaScript implementations on the Pebble were lacking in cleanliness and customization, and so this is a final, perfected version of the one I made back in 2017.
+When I got my first pebble smartwatch in 2016, I knew I wanted a basic digital watchface. I looked around for a bit, and found none that did quite what I was looking for. So I learned JavaScript to build my own, which has been on the store ever since. However, JavaScript implementations on the Pebble are not the most elegant, and aren't compatable with the oldest Pebbles, and so this is a final, perfected version of the one I made back in 2017, now written in C.
 
 ## Functioning Screenshot
 ![origin](https://github.com/user-attachments/assets/00fd1429-fae9-4c04-a079-1514f83c583d)
 
 ## Details
-The watchface simulates a 7-segment display, as shown. The numbers are auto-centered, and the lengths and thicknesses of the individual cells are parameterized (cell width has to be odd, though. See [Total Digital](https://github.com/steel-wing/total-digital) for more customization). Numbers and background can be colored, military time is supported, and you can even choose to disable the "tail" on the 6 and the 9, if you so choose.
+The watchface simulates a 7-segment display, as shown. The numbers are auto-centered, based on the size of the watch. See my watchface [Total Digital](https://github.com/steel-wing/total-digital) for a more customizable version.
