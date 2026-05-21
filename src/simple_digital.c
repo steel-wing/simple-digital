@@ -1,21 +1,25 @@
 #include <pebble.h>
 
-#define LENGTH 12   // length of a cell, tip to tip
-#define WIDTH 3     // has to be odd in order to look good, unfortunately
-#define GAP 4       // gap between numbers
-#define SPACING 1   // gap between cells (taxicab)
+// slight increase in size for the larger watches
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_FLINT)
+#define LENGTH 14   // length of a cell, tip to tip
+#else
+#define LENGTH 12
+#endif
+
+#define WIDTH 3
+#define GAP 4
+#define SPACING 1
 #define S 1         // the tail on the 6
 #define N 1         // the tail on the 9
 #define BACKGROUND GColorBlack
 #define FOREGROUND GColorWhite
 
-// this may be bad practice, but I just wanted the big statics at the bottom, okay?
 static const bool ILLUMINATION_TABLE[10][7];
 static const GPathInfo COLON_CELL;
 static const GPathInfo VERTICAL_CELL;
 static const GPathInfo HORIZONTAL_CELL;
 
-// important variables for below
 Window *window;
 Layer *watchface_layer;
 GRect window_get_unobstructed_area(Window *win);
@@ -93,7 +97,7 @@ void draw_colon(GContext *ctx, GPoint colon_origin) {
     // make a copy so we don't ruin anything
     GPoint origin = colon_origin;
 
-    // little bit of math to center the dots the way I want
+    // little bit of math to center the dots
     origin.y += WIDTH / 2 + SPACING + LENGTH / 2 - 1;
 
     draw_cell(ctx, illuminate, origin, &COLON_CELL);
@@ -102,7 +106,7 @@ void draw_colon(GContext *ctx, GPoint colon_origin) {
     draw_cell(ctx, illuminate, origin, &COLON_CELL);
 }
 
-// function for calculating the width of a number based on parameters 
+// function for calculating the width of a number
 int number_width(int length, int width, int spacing, int digit) {
     if (digit == 1) {
         return width;
@@ -113,7 +117,7 @@ int number_width(int length, int width, int spacing, int digit) {
     }
 }
 
-// function for calculating the height of a number based on parameters 
+// function for calculating the height of a number
 int number_height(int length, int width, int spacing, int digit) {
     return 2 * length + 2 * ((width - 1) / 2) + 4 * spacing;
 }
@@ -195,7 +199,6 @@ void watchface_update(Layer *layer, GContext *ctx) {
     draw_digit(ctx, drawpoint, m2);
 }
 
-// clear out the stuff for time reception? not really sure about this one
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
     layer_mark_dirty(window_get_root_layer(window));
 }
@@ -212,12 +215,12 @@ void window_load(Window *window) {
     layer_add_child(window_get_root_layer(window), watchface_layer);
 }
 
-// Window unload function to clean up
+// window unload function to clean up
 void window_unload(Window *window) {
     layer_destroy(watchface_layer);
 }
 
-// init() to handle everything that has to get done at the startt
+// init() to handle everything that has to get done at the start
 static void init() {
     // construct window and get it into position
     window = window_create();
@@ -236,7 +239,6 @@ static void deinit() {
     window_destroy(window);
 }
 
-// gotta love best practice
 int main(void) {
     init();
     app_event_loop();
@@ -268,7 +270,6 @@ static const GPathInfo HORIZONTAL_CELL = {
 
 // path for a vertical cell
 static const GPathInfo VERTICAL_CELL = {
-    // arcane math to counter pebble's awful line drawing script
     6, (GPoint []){
         {((WIDTH - 1) / 2), -1},
         {(WIDTH), ((WIDTH - 1) / 2)},
@@ -281,8 +282,6 @@ static const GPathInfo VERTICAL_CELL = {
 
 // how we decide which cells to illuminate for which digits
 static const bool ILLUMINATION_TABLE[10][7] = {
-// yes I know these are the wrong datatypes but this looks better
-
 //   a, b, c, d, e, f, g 
     {1, 1, 1, 1, 1, 1, 0},   // 0
     {0, 1, 1, 0, 0, 0, 0},   // 1          aaaa
